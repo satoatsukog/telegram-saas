@@ -309,3 +309,102 @@ Hackers "Show IH", X #buildinpublic, Telegram bot directories (tgfind/StoreBot).
 **Close alternative — Idea #2** if the priority is *speed to first payment over moat*:
 fastest build + strongest 2026-11-17 tailwind, but near-commodity. This is a genuine
 fork worth the user's call before Step 2.
+
+---
+
+# Step 1c — Low-risk re-pick
+
+**Date:** 2026-11-20
+**Why:** Developer is a solo beginner; security risk must be minimal. New **hard
+constraints** — all 8 ideas below satisfy ALL of them:
+- **B2C only:** the end user pays *me* in *my* bot for a service *my bot* performs.
+- I **never hold** other people's money, bot tokens, passwords, API keys, or payment
+  data. (Telegram processes Stars; Stars land in *my* balance. My own LLM key is mine.)
+- Store **only** Telegram user id, user settings, subscription expiry. **No** sensitive
+  personal data (health, finance, documents, IDs, receipt photos).
+- **No** marketplace, **no** payouts to third parties, **no** reselling others' content.
+- Value comes from **my bot's own functionality**, not content I hand-write.
+
+> This **retires Step 1a/1b picks**: #3 course bot resells a teacher's content (B2B +
+> reselling) and #1/#2 route around others' channels/products — all now out of scope.
+
+## Fresh signals (reused + new; link · date · quote)
+- **2026** — exitbid/aziqdev — *"paid bot access — especially AI tools — works well,
+  where the user pays 50 Stars per run and gets a result with no subscription friction"*;
+  *"even simple niche bots earn $200–$500/month from subscriptions."* https://exitbid.io/blog/telegram-bot-monetization-2026 ; https://aziqdev.com/blog/telegram-bot-monetization
+- **2026** — (market) — *"users will spend over $20 million on Telegram Stars"* in 2026;
+  Telegram takes 0% of creators' Stars. https://exitbid.io/blog/telegram-bot-monetization-2026
+- **2026** — lingopie/heklin/promova — language-learning willingness-to-pay is proven:
+  Pimsleur ~$20/mo, Memrise Pro ~$5/mo, Lingvist Pro ~$20/mo, Babbel ~$13.95/mo;
+  *"the streak system keeps users coming back."* https://lingopie.com/blog/best-vocabulary-apps-10-picks-for-english-and-new-languages/ ; https://heklin.com/best-spaced-repetition-software-to-master-vocabulary
+- **2024 study (via 2026 ref)** — *"digital flashcards improved vocabulary learning
+  compared with paper flashcards… spaced repetition reviews words at the exact interval
+  needed to retain them long-term."* https://heklin.com/best-spaced-repetition-software-to-master-vocabulary
+- **2026** — reminder/habit space is a **tarpit**: free clones everywhere —
+  *"KindlyRemindly is completely free… voice reminders, complex schedules, multiple
+  timezones, and the mini app at no cost"*; Alarmlify premium is a one-time $9.99;
+  multiple open-source aiogram habit bots on GitHub; a dev *"built a habit-tracking
+  Telegram bot in two days."* https://remindly.you/ ; https://alarmlify.com/telegram-recurring-reminder-bot/ ; https://github.com/theluckystrike/telegram-habit-tracker-bot
+- **2026 (reused from 1b)** — Telegram **QuizBot = 1,525,980 MAU** → huge proven appetite
+  for quiz/study mechanics on Telegram, but it can't do SRS, decks, or paid tiers.
+  https://www.airdroid.com/ai-insights/telegram-bot-list-for-students/
+- **2026** — SRS tools people already pay for: AnkiMobile (iOS) ~$25 one-time, Quizlet
+  Plus ~$36/yr → willingness-to-pay for spaced repetition exists even though Anki
+  desktop is free. https://heklin.com/best-spaced-repetition-software-to-master-vocabulary
+- *(Reddit still blocked → primary Reddit quotes = **no data**; nothing invented.)*
+
+## Eight constraint-compliant B2C ideas, scored (1–5) + Security risk (1=low, 5=high)
+
+| # | Idea (my bot's own service) | Pain | Pay | Reach | Speed | Gap | Ret | TG fit | Total | Sec | Security one-liner |
+|---|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|------|
+| 1 | **Spaced-repetition flashcard/study bot** (user's own cards, SM-2 engine, daily reviews, streaks) | 4 | 4 | 4 | 3 | 3 | 5 | 5 | **28** | **1** | Only user id + own card text + schedule; no external APIs, no money/keys held, no PII categories |
+| 2 | **AI language/vocab coach** (daily drills + example sentences + practice via *my* LLM key) | 4 | 4 | 4 | 3 | 4 | 5 | 5 | **29** | 2 | My own LLM key (mine); API cost-abuse + content moderation; no sensitive data stored |
+| 3 | Smart recurring reminder bot (NL parse, timezones) — **tarpit** | 4 | 2 | 4 | 4 | 1 | 4 | 5 | 24 | 1 | Stores reminder text + time only; mild (user-authored text) |
+| 4 | Habit & streak tracker bot — **tarpit** | 3 | 2 | 4 | 4 | 2 | 4 | 5 | 24 | 1 | Habit names + tap check-ins; trivially non-sensitive |
+| 5 | Birthday/special-date reminder + AI gift ideas | 3 | 3 | 3 | 4 | 3 | 4 | 4 | 24 | 2 | Stores *third parties'* names+dates (others' PII) + optional LLM |
+| 6 | AI image-generation bot (pay-per-image in Stars) | 3 | 5 | 3 | 4 | 2 | 3 | 5 | 25 | 3 | Highest misuse surface (18+/abuse), API cost-abuse, IP concerns |
+| 7 | Daily AI trivia/quiz game (streaks, leaderboards) | 3 | 3 | 4 | 4 | 3 | 4 | 5 | 26 | 2 | LLM generation cost + light moderation; minimal data |
+| 8 | Subscription/trial renewal reminder (names + dates only) | 4 | 3 | 3 | 4 | 3 | 4 | 4 | 25 | 2 | Adjacent to finance but stores **no** payment data/account numbers |
+
+> Totals are close; the **hard "minimal security" constraint** breaks the tie in favour
+> of the Security-1 option that still has the best retention.
+
+## Pick
+
+**🏆 Idea #1 — "RecallDeck" (working name): a spaced-repetition flashcard study bot.**
+Users build their own decks inside Telegram; the bot schedules reviews with a proven
+SRS algorithm (SM-2), runs a once-a-day review session with tap-to-grade, tracks streaks
+and stats, and shows a Mini App board. Users pay *me* in Stars to unlock unlimited
+decks/cards and advanced features.
+
+**Why it wins under these constraints:**
+- **Security = 1 (the decisive factor):** no external API keys, no third-party money or
+  secrets, no sensitive-data categories — I store only user id, deck/card text the user
+  wrote, review schedule, and subscription expiry. Smallest possible attack/liability
+  surface for a solo beginner.
+- **Retention = 5 (best in set):** SRS is inherently a *daily-return* mechanic; streaks
+  compound it. Signals confirm streaks "keep users coming back."
+- **Proof of pay:** people pay for SRS today (AnkiMobile $25, Quizlet Plus ~$36/yr,
+  Memrise ~$5/mo) even though free options exist.
+- **Reach for free:** r/Anki, r/languagelearning, r/GetStudying, exam-prep & language
+  Telegram study channels, bot directories, Indie Hackers "Show IH", X #buildinpublic.
+- **TG fit = 5 & value is mine:** QuizBot's 1.5M MAU proves study mechanics thrive on
+  Telegram, yet none offer SRS + decks + paid tiers. The value is my scheduling engine —
+  **I never write the content; the user does.**
+- **MVP (Speed 3):** SM-2 scheduler + deck/card CRUD + daily review loop + Stars
+  subscription gate + small Mini App board → buildable in ~1–2 days with aiogram 3 +
+  React/Tailwind.
+
+**Pricing (B2C, paid to me in Stars):**
+- **Free:** up to 2 decks / 60 cards, daily reviews, streaks.
+- **Premium — 199 ⭐/month** (~$3–4) *or* **1,499 ⭐/year**: unlimited decks & cards,
+  custom intervals, reverse/cloze cards, leech detection, full stats, Mini App board,
+  CSV/Anki import.
+
+**Honest downsides:** moderate willingness-to-pay (free Anki anchors expectations) →
+lead on *frictionless, lives-in-Telegram, zero-setup* rather than feature parity.
+
+**Higher-ceiling alternative — Idea #2 (AI language coach):** scores 1 point higher on
+upside (stronger gap + pay) but carries **Security 2** (my LLM key, API cost-abuse,
+content moderation) and ongoing per-use cost. Pick it only if you accept that risk; the
+SRS flashcard engine can later add optional AI card-generation as a premium add-on.
