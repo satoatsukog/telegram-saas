@@ -1,7 +1,15 @@
 import { getInitData } from "./tg";
 
 export type Deck = { id: number; name: string; due: number; total: number };
-export type Home = { streak: number; dueToday: number; totalCards: number; premium: boolean; premiumUntil: string | null; decks: Deck[] };
+export type Home = {
+  streak: number;
+  dueToday: number;
+  totalCards: number;
+  premium: boolean;
+  premiumUntil: string | null;
+  prices: { monthly: number; yearly: number };
+  decks: Deck[];
+};
 export type Card = { id: number; front: string; back: string };
 export type DeckDetail = { id: number; name: string; cards: Card[] };
 export type Next = { card: Card | null; due: number };
@@ -107,7 +115,15 @@ const mock: ApiImpl = {
       due: d.cards.filter((c) => c.due).length,
       total: d.cards.length,
     }));
-    return { streak: mockStreak, dueToday: dueCount(), totalCards: decks.reduce((a, d) => a + d.total, 0), premium: false, premiumUntil: null, decks };
+    return {
+      streak: mockStreak,
+      dueToday: dueCount(),
+      totalCards: decks.reduce((a, d) => a + d.total, 0),
+      premium: false,
+      premiumUntil: null,
+      prices: { monthly: 199, yearly: 1499 },
+      decks,
+    };
   },
   async saveSettings() {
     return null;

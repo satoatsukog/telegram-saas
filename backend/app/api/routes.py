@@ -122,6 +122,7 @@ async def home(uid: int = Depends(get_user_id), session: AsyncSession = Depends(
         "totalCards": total,
         "premium": is_premium(user.premium_until, utcnow()),
         "premiumUntil": user.premium_until.isoformat() if user.premium_until else None,
+        "prices": {"monthly": PRICE_MONTHLY, "yearly": PRICE_YEARLY},
         "decks": out,
     }
 
