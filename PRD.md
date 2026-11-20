@@ -22,6 +22,18 @@ is huge on Telegram** (these are *proof of size*, not distribution channels — 
 willingness to pay; their need is narrow (drill a finite set of exam words), which lets me
 stay far simpler than general tools.
 
+### Audience test (first 2 weeks)
+The product is niche-neutral (drill *any* words/terms), so the same build lets me test which
+deadline-driven, vocabulary-heavy audience converts best. I'll run **2–3 audiences in parallel**,
+each with its own deep link `?start=<source>` (attributed via the `start(source)` event, §8):
+- `?start=aud_ielts` — IELTS / English-exam vocabulary (the primary hypothesis above).
+- `?start=aud_gre` — GRE / SAT exam vocabulary.
+- `?start=aud_med` — medical / nursing terminology students.
+
+**Decision rule:** after 2 weeks, compare the funnel per source
+(start → onboarding_done → first_review_done → pay) and double down on the winner; IELTS stays
+the default hypothesis unless another audience clearly out-converts it.
+
 ### Distribution — how I actually reach them (honest, near-$0)
 The big channels above are **admin-only broadcast channels**: posting in them is **not free**
 (it means paid ads or an admin deal), so they are NOT a free growth channel. Real plan:

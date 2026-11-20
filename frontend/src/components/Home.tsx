@@ -11,7 +11,7 @@ export default function Home({
   onUpgrade: () => void;
 }) {
   const [data, setData] = useState<HomeT | null>(null);
-  const [name, setName] = useState("My IELTS words");
+  const [name, setName] = useState("My words");
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");

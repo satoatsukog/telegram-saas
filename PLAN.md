@@ -64,20 +64,31 @@ Passed: free flow, paywall, real 1-Star test purchase (second account), admin no
   refund restores non-premium; reminder fires at 19:00 local; free caps block correctly.
 - Fix bugs found; keep notes for README.
 
-## Step 7 — Deploy
+## Step 7 — Deploy  ✅ (code ready; Railway Hobby, from GitHub repo)
 **Goal:** public, always-on bot + Mini App over HTTPS.
-- Host backend (e.g. Fly.io/Railway/VPS) with persistent SQLite volume; serve the built
-  Mini App over HTTPS; set `WEBAPP_URL`, bot menu button → web_app.
-- Run the **two processes** (`uvicorn app.main:app` and `python -m app.bot_runner`) as
-  separate services; keep polling for MVP; confirm exactly ONE poller and ONE scheduler run
-  in prod and survive restarts.
-- Switch `SUPPORT_EMAIL` in `.env` to the dedicated work email before launch.
-- Add a `/help` command explaining how to use the bot and open the Mini App.
-- Register commands via `set_my_commands` (start, help, paysupport) so they show in the menu.
-- Set a persistent Mini App menu button via `set_chat_menu_button` (uses the production `WEBAPP_URL`).
-- Before launch: ensure `PRICE_MONTHLY`/`PRICE_YEARLY` are NOT set in the production `.env`
-  (defaults 199/1499), or are set to the real prices.
+- **One Railway service, one volume** (SQLite is a single file). In prod everything runs in
+  **one process**: `uvicorn app.main:app` serves the API *and* the built frontend (same origin,
+  no CORS) and starts bot polling + scheduler inside the FastAPI lifespan when `RUN_BOT=1`.
+  `railway.json` pins `numReplicas: 1` so there is exactly ONE poller and ONE scheduler.
+- **Local dev unchanged:** `uvicorn app.main:app --reload` (RUN_BOT unset → API + static only)
+  and `python -m app.bot_runner` (the only poller/scheduler) stay as before.
+- **Alembic migrations run on startup** (`apply_migrations()`), replacing `create_all` — future
+  schema changes never require deleting the DB. Initial migration = current schema.
+- `Dockerfile` (multi-stage) builds the frontend (`npm run build`) and the Python image.
+- `DATABASE_URL=sqlite+aiosqlite:////data/recalldeck.db` points at the Railway volume (`/data`).
+- `GET /health` for Railway health checks.
+- ✅ `/help` command; ✅ `set_my_commands` (start, help, paysupport); ✅ `set_chat_menu_button`
+  with production `WEBAPP_URL`; ✅ prices from env (`PRICE_MONTHLY`/`PRICE_YEARLY`, defaults 199/1499).
+- Switch `SUPPORT_EMAIL` to the dedicated work email before launch.
+- Dashboard/BotFather steps (manual): create project from GitHub, add `/data` volume, set env
+  vars (`BOT_TOKEN`, `WEBAPP_URL`, `DATABASE_URL`, `SUPPORT_EMAIL`, `ADMIN_ID`, `RUN_BOT=1`),
+  generate a domain → put it in `WEBAPP_URL`, set the BotFather menu-button URL.
 - Smoke test end-to-end on the live URL from a phone.
+
+**Backups (manual for now):** SQLite lives on the Railway volume at `/data/recalldeck.db`.
+Periodically copy it off the volume via the Railway CLI (`railway ssh` / `railway run` a shell
+and `cp`/stream `/data/recalldeck.db` out) and keep it off-site. Automate (scheduled dump →
+object storage) after launch.
 
 ## Step 8 — README with GIF
 **Goal:** a launch-ready repo + assets for distribution (PRD §1 Distribution).

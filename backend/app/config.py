@@ -9,6 +9,7 @@ WEBAPP_URL = os.getenv("WEBAPP_URL", "")
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///recalldeck.db")
 SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", "")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0") or "0")
+RUN_BOT = os.getenv("RUN_BOT", "") == "1"
 
 AUTH_MAX_AGE_SECONDS = 24 * 60 * 60
 FREE_DECKS = 2
