@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.core.limits import cards_allowed, deck_allowed
-from app.core.payments import admin_payment_note, apply_payment, process_refund, valid_payment
+from app.core.payments import PRICES, admin_payment_note, apply_payment, process_refund, valid_payment
 from app.core.premium import extend, is_premium, shorten
 from app.core.timeutil import utcnow
 from app.db.models import Base, Payment, User
@@ -145,11 +145,11 @@ def test_shorten_floors_at_now():
 
 
 def test_valid_payment_checks():
-    assert valid_payment("XTR", "monthly", 199) is True
-    assert valid_payment("XTR", "yearly", 1499) is True
-    assert valid_payment("XTR", "monthly", 999) is False
-    assert valid_payment("USD", "monthly", 199) is False
-    assert valid_payment("XTR", "weekly", 199) is False
+    assert valid_payment("XTR", "monthly", PRICES["monthly"]) is True
+    assert valid_payment("XTR", "yearly", PRICES["yearly"]) is True
+    assert valid_payment("XTR", "monthly", PRICES["monthly"] + 1) is False
+    assert valid_payment("USD", "monthly", PRICES["monthly"]) is False
+    assert valid_payment("XTR", "weekly", PRICES["monthly"]) is False
 
 
 def test_extend_from_max_now_or_until():
