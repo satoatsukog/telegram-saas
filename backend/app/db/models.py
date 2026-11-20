@@ -17,30 +17,36 @@ class User(Base):
     tz: Mapped[str] = mapped_column(String(64), default="UTC")
     reminder_hour: Mapped[int] = mapped_column(default=19)
     last_reminded_on: Mapped[date | None] = mapped_column(default=None)
+    last_review_on: Mapped[date | None] = mapped_column(default=None)
+    streak: Mapped[int] = mapped_column(default=0)
     premium_until: Mapped[datetime | None] = mapped_column(default=None)
     source: Mapped[str] = mapped_column(String(64), default="direct")
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
-    decks: Mapped[list[Deck]] = relationship(back_populates="user")
+    decks: Mapped[list[Deck]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class Deck(Base):
     __tablename__ = "decks"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     name: Mapped[str] = mapped_column(String(128))
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     user: Mapped[User] = relationship(back_populates="decks")
-    cards: Mapped[list[Card]] = relationship(back_populates="deck")
+    cards: Mapped[list[Card]] = relationship(
+        back_populates="deck", cascade="all, delete-orphan"
+    )
 
 
 class Card(Base):
     __tablename__ = "cards"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    deck_id: Mapped[int] = mapped_column(ForeignKey("decks.id"))
+    deck_id: Mapped[int] = mapped_column(ForeignKey("decks.id", ondelete="CASCADE"))
     front: Mapped[str] = mapped_column(String(512))
     back: Mapped[str] = mapped_column(String(512))
     ease: Mapped[float] = mapped_column(default=2.5)
