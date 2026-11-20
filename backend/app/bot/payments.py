@@ -4,7 +4,7 @@ from aiogram.types import Message, PreCheckoutQuery
 
 from app.config import ADMIN_ID
 from app.core.events import log_event
-from app.core.payments import apply_payment, process_refund, valid_payment
+from app.core.payments import admin_payment_note, apply_payment, process_refund, valid_payment
 from app.db.models import User
 from app.db.session import async_session
 
@@ -44,6 +44,14 @@ async def on_paid(message: Message) -> None:
         await session.commit()
     if created:
         await message.answer("✅ Premium is active — unlimited decks and cards. Thank you!")
+        if ADMIN_ID:
+            try:
+                await message.bot.send_message(
+                    ADMIN_ID,
+                    admin_payment_note(sp.invoice_payload, uid, sp.total_amount, sp.telegram_payment_charge_id),
+                )
+            except Exception:
+                pass
 
 
 @router.message(Command("refund"))

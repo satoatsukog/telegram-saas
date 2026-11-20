@@ -15,6 +15,10 @@ def valid_payment(currency: str, payload: str, total_amount: int) -> bool:
     return currency == "XTR" and payload in PRICES and total_amount == PRICES[payload]
 
 
+def admin_payment_note(plan: str, user_id: int, stars: int, charge_id: str) -> str:
+    return f"💰 {plan} paid by {user_id}, {stars} Stars. Refund: /refund {charge_id}"
+
+
 async def apply_payment(session: AsyncSession, user: User, charge_id: str, plan: str, stars: int) -> bool:
     exists = await session.scalar(
         select(Payment.id).where(Payment.telegram_payment_charge_id == charge_id)
@@ -34,9 +38,9 @@ async def process_refund(session: AsyncSession, bot: Any, charge_id: str) -> tup
         return "not_found", None
     if payment.refunded:
         return "already_refunded", payment.user_id
-    await bot.refund_star_payment(payment.user_id, charge_id)
     if payment.plan == "monthly":
         await bot.edit_user_star_subscription(payment.user_id, charge_id, is_canceled=True)
+    await bot.refund_star_payment(payment.user_id, charge_id)
     payment.refunded = True
     user = await session.get(User, payment.user_id)
     if user is not None:

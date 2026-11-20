@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.core.limits import cards_allowed, deck_allowed
-from app.core.payments import apply_payment, process_refund, valid_payment
+from app.core.payments import admin_payment_note, apply_payment, process_refund, valid_payment
 from app.core.premium import extend, is_premium, shorten
 from app.core.timeutil import utcnow
 from app.db.models import Base, Payment, User
@@ -26,12 +26,15 @@ class FakeBot:
     def __init__(self):
         self.refunds = []
         self.cancels = []
+        self.order = []
 
     async def refund_star_payment(self, user_id, charge_id):
+        self.order.append("refund")
         self.refunds.append((user_id, charge_id))
         return True
 
     async def edit_user_star_subscription(self, user_id, charge_id, is_canceled):
+        self.order.append("cancel")
         self.cancels.append((user_id, charge_id, is_canceled))
         return True
 
@@ -116,6 +119,21 @@ async def test_yearly_kept_after_refunding_monthly(session):
     assert is_premium(user.premium_until, utcnow()) is True
     ypay = await session.scalar(select(Payment).where(Payment.telegram_payment_charge_id == "y1"))
     assert ypay.refunded is False
+
+
+async def test_refund_cancels_before_refund(session):
+    user = await _user(session, 7)
+    await apply_payment(session, user, "cho", "monthly", 199)
+    await session.commit()
+    bot = FakeBot()
+    await process_refund(session, bot, "cho")
+    await session.commit()
+    assert bot.order == ["cancel", "refund"]
+
+
+def test_admin_payment_note_format():
+    note = admin_payment_note("monthly", 42, 199, "ch_x")
+    assert "monthly" in note and "42" in note and "199" in note and "/refund ch_x" in note
 
 
 def test_shorten_floors_at_now():
