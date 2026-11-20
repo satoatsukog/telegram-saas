@@ -1,7 +1,7 @@
 import { getInitData } from "./tg";
 
 export type Deck = { id: number; name: string; due: number; total: number };
-export type Home = { streak: number; dueToday: number; totalCards: number; decks: Deck[] };
+export type Home = { streak: number; dueToday: number; totalCards: number; premium: boolean; premiumUntil: string | null; decks: Deck[] };
 export type Card = { id: number; front: string; back: string };
 export type DeckDetail = { id: number; name: string; cards: Card[] };
 export type Next = { card: Card | null; due: number };
@@ -21,7 +21,11 @@ type ApiImpl = {
   deleteCard(id: number): Promise<unknown>;
   nextReview(): Promise<Next>;
   grade(cardId: number, grade: string): Promise<GradeResult>;
+  invoice(plan: string): Promise<{ link: string }>;
+  paywall(): Promise<unknown>;
 };
+
+export type ApiError = Error & { status?: number; detail?: string };
 
 async function req(path: string, method = "GET", body?: unknown): Promise<any> {
   const res = await fetch("/api" + path, {
@@ -29,7 +33,18 @@ async function req(path: string, method = "GET", body?: unknown): Promise<any> {
     headers: { "Content-Type": "application/json", Authorization: "tma " + getInitData() },
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) {
+    let detail = "";
+    try {
+      detail = (await res.json()).detail ?? "";
+    } catch {
+      detail = "";
+    }
+    const err: ApiError = new Error(detail || res.statusText);
+    err.status = res.status;
+    err.detail = detail;
+    throw err;
+  }
   return res.status === 204 ? null : res.json();
 }
 
@@ -47,6 +62,8 @@ const real: ApiImpl = {
   deleteCard: (id) => req("/cards/" + id, "DELETE"),
   nextReview: () => req("/review/next"),
   grade: (cardId, grade) => req("/review/grade", "POST", { card_id: cardId, grade }),
+  invoice: (plan) => req("/invoice", "POST", { plan }),
+  paywall: () => req("/paywall", "POST"),
 };
 
 const SEPS = [" - ", " — ", " – "];
@@ -90,7 +107,7 @@ const mock: ApiImpl = {
       due: d.cards.filter((c) => c.due).length,
       total: d.cards.length,
     }));
-    return { streak: mockStreak, dueToday: dueCount(), totalCards: decks.reduce((a, d) => a + d.total, 0), decks };
+    return { streak: mockStreak, dueToday: dueCount(), totalCards: decks.reduce((a, d) => a + d.total, 0), premium: false, premiumUntil: null, decks };
   },
   async saveSettings() {
     return null;
@@ -169,6 +186,12 @@ const mock: ApiImpl = {
     if (mockStreak === 0) mockStreak = 1;
     return { streak: mockStreak, due: dueCount() };
   },
+  async invoice() {
+    return { link: "https://t.me/invoice/mock" };
+  },
+  async paywall() {
+    return null;
+  },
 };
 
 export const canUse = (): boolean => Boolean(getInitData()) || import.meta.env.DEV;
@@ -189,4 +212,6 @@ export const api: ApiImpl = {
   deleteCard: (id) => pick().deleteCard(id),
   nextReview: () => pick().nextReview(),
   grade: (cardId, grade) => pick().grade(cardId, grade),
+  invoice: (plan) => pick().invoice(plan),
+  paywall: () => pick().paywall(),
 };

@@ -70,6 +70,7 @@ Scope is fixed by `PRD.md` (MVP IN/OUT). Build nothing from the OUT list.
 - Run the **two processes** (`uvicorn app.main:app` and `python -m app.bot_runner`) as
   separate services; keep polling for MVP; confirm exactly ONE poller and ONE scheduler run
   in prod and survive restarts.
+- Switch `SUPPORT_EMAIL` in `.env` to the dedicated work email before launch.
 - Smoke test end-to-end on the live URL from a phone.
 
 ## Step 8 — README with GIF

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { api, type DeckDetail } from "../lib/api";
+import { api, type ApiError, type DeckDetail } from "../lib/api";
 
-export default function Deck({ id, onBack }: { id: number; onBack: () => void }) {
+export default function Deck({ id, onBack, onUpgrade }: { id: number; onBack: () => void; onUpgrade: () => void }) {
   const [data, setData] = useState<DeckDetail | null>(null);
   const [front, setFront] = useState("");
   const [back, setBack] = useState("");
@@ -47,11 +47,15 @@ export default function Deck({ id, onBack }: { id: number; onBack: () => void })
         />
         <button
           onClick={async () => {
-            if (front.trim() && back.trim()) {
+            if (!front.trim() || !back.trim()) return;
+            setErr("");
+            try {
               await api.addCard(id, front.trim(), back.trim());
               setFront("");
               setBack("");
               load();
+            } catch (e) {
+              if ((e as ApiError).status === 402) onUpgrade();
             }
           }}
           className="rounded-lg bg-blue-600 px-3 text-white"
@@ -73,8 +77,9 @@ export default function Deck({ id, onBack }: { id: number; onBack: () => void })
             await api.pasteInto(id, paste);
             setPaste("");
             load();
-          } catch {
-            setErr("No valid pairs found. Use: word - meaning");
+          } catch (e) {
+            if ((e as ApiError).status === 402) onUpgrade();
+            else setErr("No valid pairs found. Use: word - meaning");
           }
         }}
         className="w-full rounded-lg border py-2"

@@ -4,6 +4,7 @@ from aiogram import Bot, Dispatcher
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.bot.handlers import router
+from app.bot.payments import router as payments_router
 from app.config import BOT_TOKEN
 from app.db.session import init_db
 from app.scheduler.reminders import run_due_reminders
@@ -16,6 +17,7 @@ async def main() -> None:
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
     dp.include_router(router)
+    dp.include_router(payments_router)
     scheduler = AsyncIOScheduler(timezone="UTC")
     scheduler.add_job(run_due_reminders, "cron", minute=0, args=[bot])
     scheduler.start()

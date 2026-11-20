@@ -27,3 +27,7 @@ class TextIn(BaseModel):
 class GradeIn(BaseModel):
     card_id: int
     grade: str = Field(pattern="^(again|good|easy)$")
+
+
+class InvoiceIn(BaseModel):
+    plan: str = Field(pattern="^(monthly|yearly)$")

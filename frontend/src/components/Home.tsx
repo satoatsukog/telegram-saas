@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
-import { api, type Home as HomeT } from "../lib/api";
+import { api, type ApiError, type Home as HomeT } from "../lib/api";
 
-export default function Home({ onOpenDeck, onReview }: { onOpenDeck: (id: number) => void; onReview: () => void }) {
+export default function Home({
+  onOpenDeck,
+  onReview,
+  onUpgrade,
+}: {
+  onOpenDeck: (id: number) => void;
+  onReview: () => void;
+  onUpgrade: () => void;
+}) {
   const [data, setData] = useState<HomeT | null>(null);
   const [name, setName] = useState("My IELTS words");
   const [text, setText] = useState("");
@@ -23,8 +31,9 @@ export default function Home({ onOpenDeck, onReview }: { onOpenDeck: (id: number
       try {
         await api.paste(name.trim() || "My words", text);
         onReview();
-      } catch {
-        setErr("No valid pairs found. Use: word - meaning");
+      } catch (e) {
+        if ((e as ApiError).status === 402) onUpgrade();
+        else setErr("No valid pairs found. Use: word - meaning");
       } finally {
         setBusy(false);
       }
@@ -64,6 +73,15 @@ export default function Home({ onOpenDeck, onReview }: { onOpenDeck: (id: number
           🔥 {data.streak}
         </div>
       </div>
+      {!data.premium && (
+        <button
+          data-testid="upgrade"
+          onClick={onUpgrade}
+          className="w-full rounded-lg border border-amber-400 bg-amber-50 py-2 text-sm font-semibold text-amber-700"
+        >
+          ⭐ Upgrade to Premium — unlimited decks &amp; cards
+        </button>
+      )}
       <div className="grid grid-cols-2 gap-3 text-center">
         <div className="rounded-lg bg-gray-100 p-3">
           <div className="text-2xl font-bold">{data.dueToday}</div>

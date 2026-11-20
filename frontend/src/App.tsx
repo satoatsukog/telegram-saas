@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import Deck from "./components/Deck";
 import Home from "./components/Home";
+import Paywall from "./components/Paywall";
 import Review from "./components/Review";
 import { api, canUse } from "./lib/api";
 import { getTimeZone } from "./lib/tg";
 
-type Screen = { name: "home" } | { name: "deck"; id: number } | { name: "review" };
+type Screen = { name: "home" } | { name: "deck"; id: number } | { name: "review" } | { name: "paywall" };
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: "home" });
@@ -34,10 +35,19 @@ export default function App() {
   return (
     <div className="mx-auto min-h-screen max-w-md bg-white text-gray-900">
       {screen.name === "home" && (
-        <Home onOpenDeck={(id) => setScreen({ name: "deck", id })} onReview={() => setScreen({ name: "review" })} />
+        <Home
+          onOpenDeck={(id) => setScreen({ name: "deck", id })}
+          onReview={() => setScreen({ name: "review" })}
+          onUpgrade={() => setScreen({ name: "paywall" })}
+        />
       )}
-      {screen.name === "deck" && <Deck id={screen.id} onBack={() => setScreen({ name: "home" })} />}
+      {screen.name === "deck" && (
+        <Deck id={screen.id} onBack={() => setScreen({ name: "home" })} onUpgrade={() => setScreen({ name: "paywall" })} />
+      )}
       {screen.name === "review" && <Review onDone={() => setScreen({ name: "home" })} />}
+      {screen.name === "paywall" && (
+        <Paywall onBack={() => setScreen({ name: "home" })} onPaid={() => setScreen({ name: "home" })} />
+      )}
     </div>
   );
 }

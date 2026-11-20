@@ -3,7 +3,7 @@ from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import Message
 
 from app.bot.keyboards import open_app_kb
-from app.config import WEBAPP_URL
+from app.config import SUPPORT_EMAIL, WEBAPP_URL
 from app.core.deep_link import parse_source
 from app.core.events import log_event
 from app.db.models import User
@@ -12,10 +12,6 @@ from app.db.session import async_session
 router = Router()
 
 GREETING = "Welcome to RecallDeck — drill your vocabulary in one tap a day."
-PAYSUPPORT = (
-    "Payments are handled by Telegram in Stars. If something went wrong with a "
-    "purchase, reply here and we'll help, including refunds where applicable."
-)
 
 
 @router.message(CommandStart())
@@ -35,4 +31,6 @@ async def start(message: Message, command: CommandObject) -> None:
 
 @router.message(Command("paysupport"))
 async def paysupport(message: Message) -> None:
-    await message.answer(PAYSUPPORT)
+    await message.answer(
+        f"For payment issues email {SUPPORT_EMAIL}, include your Telegram ID: {message.from_user.id}"
+    )

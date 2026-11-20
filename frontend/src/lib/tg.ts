@@ -36,3 +36,11 @@ export function getTimeZone(): string {
     return "UTC";
   }
 }
+
+export function openInvoice(url: string): Promise<string> {
+  const tg = (window as unknown as { Telegram?: { WebApp?: any } }).Telegram?.WebApp;
+  return new Promise((resolve) => {
+    if (tg?.openInvoice) tg.openInvoice(url, (status: string) => resolve(status));
+    else resolve("unsupported");
+  });
+}

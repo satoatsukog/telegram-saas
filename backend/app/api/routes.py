@@ -1,13 +1,18 @@
 from datetime import timedelta
 
+from aiogram import Bot
+from aiogram.types import LabeledPrice
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_session, get_user_id
-from app.api.schemas import CardIn, DeckIn, GradeIn, PasteIn, SettingsIn, TextIn
+from app.api.schemas import CardIn, DeckIn, GradeIn, InvoiceIn, PasteIn, SettingsIn, TextIn
+from app.config import BOT_TOKEN, PRICE_MONTHLY, PRICE_YEARLY, SUBSCRIPTION_PERIOD
 from app.core.events import log_event
+from app.core.limits import cards_allowed, deck_allowed
 from app.core.list_parser import parse_list
+from app.core.premium import is_premium
 from app.core.sm2 import SchedulingState, schedule
 from app.core.streak import effective_streak
 from app.core.timeutil import to_local, utcnow
@@ -65,6 +70,28 @@ async def _streak(session: AsyncSession, user: User) -> int:
     return eff
 
 
+async def _deck_count(session: AsyncSession, uid: int) -> int:
+    return await session.scalar(select(func.count()).select_from(Deck).where(Deck.user_id == uid)) or 0
+
+
+async def _card_count(session: AsyncSession, uid: int) -> int:
+    return await session.scalar(
+        select(func.count()).select_from(Card).join(Deck).where(Deck.user_id == uid)
+    ) or 0
+
+
+async def _require_deck_slot(session: AsyncSession, user: User) -> None:
+    prem = is_premium(user.premium_until, utcnow())
+    if not deck_allowed(prem, await _deck_count(session, user.id)):
+        raise HTTPException(status_code=402, detail="deck_limit")
+
+
+async def _require_card_slots(session: AsyncSession, user: User, adding: int) -> None:
+    prem = is_premium(user.premium_until, utcnow())
+    if not cards_allowed(prem, await _card_count(session, user.id), adding):
+        raise HTTPException(status_code=402, detail="card_limit")
+
+
 @router.post("/settings")
 async def save_settings(body: SettingsIn, uid: int = Depends(get_user_id), session: AsyncSession = Depends(get_session)):
     user = await session.get(User, uid)
@@ -89,7 +116,14 @@ async def home(uid: int = Depends(get_user_id), session: AsyncSession = Depends(
         total += len(cards)
         due_total += due
         out.append({"id": d.id, "name": d.name, "due": due, "total": len(cards)})
-    return {"streak": await _streak(session, user), "dueToday": due_total, "totalCards": total, "decks": out}
+    return {
+        "streak": await _streak(session, user),
+        "dueToday": due_total,
+        "totalCards": total,
+        "premium": is_premium(user.premium_until, utcnow()),
+        "premiumUntil": user.premium_until.isoformat() if user.premium_until else None,
+        "decks": out,
+    }
 
 
 @router.get("/stats")
@@ -105,6 +139,7 @@ async def stats(uid: int = Depends(get_user_id), session: AsyncSession = Depends
 
 @router.post("/decks")
 async def create_deck(body: DeckIn, uid: int = Depends(get_user_id), session: AsyncSession = Depends(get_session)):
+    await _require_deck_slot(session, await session.get(User, uid))
     deck = Deck(user_id=uid, name=body.name)
     session.add(deck)
     await session.commit()
@@ -136,9 +171,12 @@ async def get_deck(deck_id: int, uid: int = Depends(get_user_id), session: Async
 
 @router.post("/paste")
 async def paste_new(body: PasteIn, uid: int = Depends(get_user_id), session: AsyncSession = Depends(get_session)):
+    user = await session.get(User, uid)
     pairs = _cap(parse_list(body.text))
     if not pairs:
         raise HTTPException(status_code=400, detail="no valid pairs found")
+    await _require_deck_slot(session, user)
+    await _require_card_slots(session, user, len(pairs))
     deck = Deck(user_id=uid, name=body.name)
     session.add(deck)
     await session.flush()
@@ -152,6 +190,7 @@ async def paste_new(body: PasteIn, uid: int = Depends(get_user_id), session: Asy
 @router.post("/decks/{deck_id}/cards")
 async def add_card(deck_id: int, body: CardIn, uid: int = Depends(get_user_id), session: AsyncSession = Depends(get_session)):
     deck = await _owned_deck(session, uid, deck_id)
+    await _require_card_slots(session, await session.get(User, uid), 1)
     card = Card(deck_id=deck.id, front=body.front, back=body.back, due_at=utcnow())
     session.add(card)
     await _emit_once(session, uid, "onboarding_done")
@@ -165,6 +204,7 @@ async def paste_into(deck_id: int, body: TextIn, uid: int = Depends(get_user_id)
     pairs = _cap(parse_list(body.text))
     if not pairs:
         raise HTTPException(status_code=400, detail="no valid pairs found")
+    await _require_card_slots(session, await session.get(User, uid), len(pairs))
     now = utcnow()
     session.add_all([Card(deck_id=deck.id, front=f, back=b, due_at=now) for f, b in pairs])
     await _emit_once(session, uid, "onboarding_done")
@@ -178,6 +218,7 @@ async def import_csv(deck_id: int, body: TextIn, uid: int = Depends(get_user_id)
     pairs = _cap(_parse_csv(body.text))
     if not pairs:
         raise HTTPException(status_code=400, detail="no valid pairs found")
+    await _require_card_slots(session, await session.get(User, uid), len(pairs))
     now = utcnow()
     session.add_all([Card(deck_id=deck.id, front=f, back=b, due_at=now) for f, b in pairs])
     await _emit_once(session, uid, "onboarding_done")
@@ -236,3 +277,36 @@ async def review_grade(body: GradeIn, uid: int = Depends(get_user_id), session: 
             await _emit_once(session, uid, "review_day", source=f"d{delta}")
     await session.commit()
     return {"streak": user.streak, "due": await _due_count(session, uid)}
+
+
+@router.post("/paywall")
+async def paywall(uid: int = Depends(get_user_id), session: AsyncSession = Depends(get_session)):
+    await log_event(session, uid, "paywall_view")
+    await session.commit()
+    return {"ok": True}
+
+
+@router.post("/invoice")
+async def invoice(body: InvoiceIn, uid: int = Depends(get_user_id), session: AsyncSession = Depends(get_session)):
+    user = await session.get(User, uid)
+    if body.plan == "monthly" and is_premium(user.premium_until, utcnow()):
+        raise HTTPException(status_code=409, detail="already_premium")
+    if body.plan == "monthly":
+        title = "RecallDeck Premium (monthly)"
+        prices = [LabeledPrice(label="RecallDeck Premium — 30 days", amount=PRICE_MONTHLY)]
+        period = SUBSCRIPTION_PERIOD
+    else:
+        title = "RecallDeck Premium (yearly)"
+        prices = [LabeledPrice(label="RecallDeck Premium — 365 days", amount=PRICE_YEARLY)]
+        period = None
+    async with Bot(BOT_TOKEN) as bot:
+        link = await bot.create_invoice_link(
+            title=title,
+            description="Unlimited decks and cards.",
+            payload=body.plan,
+            currency="XTR",
+            prices=prices,
+            provider_token="",
+            subscription_period=period,
+        )
+    return {"link": link}
