@@ -55,8 +55,9 @@ Scope is fixed by `PRD.md` (MVP IN/OUT). Build nothing from the OUT list.
 - **Idempotency:** insert `telegram_payment_charge_id` (UNIQUE); duplicate = no-op.
 - `/paysupport` + `refundStarPayment` path implemented.
 
-## Step 6 — QA from a non-premium account
+## Step 6 — QA from a non-premium account ✅ DONE
 **Goal:** verify gating and the funnel as a real free user (separate Telegram account).
+Passed: free flow, paywall, real 1-Star test purchase (second account), admin notice, /refund.
 - Walk the funnel: `start(source)` via a `?start=reels` link → paste list → review →
   paywall_view → (test) pay monthly → premium unlocked → caps lifted.
 - Verify: initData rejection on tampered/expired data; duplicate payment is a no-op;
@@ -71,6 +72,11 @@ Scope is fixed by `PRD.md` (MVP IN/OUT). Build nothing from the OUT list.
   separate services; keep polling for MVP; confirm exactly ONE poller and ONE scheduler run
   in prod and survive restarts.
 - Switch `SUPPORT_EMAIL` in `.env` to the dedicated work email before launch.
+- Add a `/help` command explaining how to use the bot and open the Mini App.
+- Register commands via `set_my_commands` (start, help, paysupport) so they show in the menu.
+- Set a persistent Mini App menu button via `set_chat_menu_button` (uses the production `WEBAPP_URL`).
+- Before launch: ensure `PRICE_MONTHLY`/`PRICE_YEARLY` are NOT set in the production `.env`
+  (defaults 199/1499), or are set to the real prices.
 - Smoke test end-to-end on the live URL from a phone.
 
 ## Step 8 — README with GIF
