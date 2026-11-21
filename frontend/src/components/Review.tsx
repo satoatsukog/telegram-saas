@@ -52,12 +52,12 @@ export default function Review({ onDone }: { onDone: () => void }) {
         ‹ Home
       </button>
       <div className="flex flex-1 items-center justify-center">
-        <div className="text-center">
-          <div data-testid="front" className="text-3xl font-bold">
+        <div className="w-full text-center">
+          <div data-testid="front" className="break-words text-3xl font-bold">
             {card.front}
           </div>
           {revealed && (
-            <div data-testid="back" className="mt-4 text-xl text-gray-600">
+            <div data-testid="back" className="mt-4 break-words text-xl text-gray-600">
               {card.back}
             </div>
           )}

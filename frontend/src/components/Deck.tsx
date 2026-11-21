@@ -34,13 +34,13 @@ export default function Deck({ id, onBack, onUpgrade }: { id: number; onBack: ()
       <h1 className="text-lg font-bold">{data.name}</h1>
       <div className="flex gap-2">
         <input
-          className="flex-1 rounded-lg border p-2"
+          className="min-w-0 flex-1 rounded-lg border p-2"
           placeholder="word"
           value={front}
           onChange={(e) => setFront(e.target.value)}
         />
         <input
-          className="flex-1 rounded-lg border p-2"
+          className="min-w-0 flex-1 rounded-lg border p-2"
           placeholder="meaning"
           value={back}
           onChange={(e) => setBack(e.target.value)}
@@ -58,7 +58,7 @@ export default function Deck({ id, onBack, onUpgrade }: { id: number; onBack: ()
               if ((e as ApiError).status === 402) onUpgrade();
             }
           }}
-          className="rounded-lg bg-blue-600 px-3 text-white"
+          className="shrink-0 rounded-lg bg-blue-600 px-3 text-white"
         >
           +
         </button>
