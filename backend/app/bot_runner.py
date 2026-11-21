@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import sys
 
 from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand, MenuButtonWebApp, WebAppInfo
@@ -9,6 +11,12 @@ from app.bot.payments import router as payments_router
 from app.config import BOT_TOKEN, WEBAPP_URL
 from app.db.session import apply_migrations
 from app.scheduler.reminders import run_due_reminders
+
+logger = logging.getLogger(__name__)
+
+
+def configure_logging() -> None:
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 COMMANDS = [
     BotCommand(command="start", description="Open the app"),
@@ -36,10 +44,13 @@ async def run_bot() -> None:
     scheduler = AsyncIOScheduler(timezone="UTC")
     scheduler.add_job(run_due_reminders, "cron", minute=0, args=[bot])
     scheduler.start()
+    me = await bot.get_me()
+    logger.info("bot polling started for @%s", me.username)
     await dp.start_polling(bot)
 
 
 async def main() -> None:
+    configure_logging()
     await apply_migrations()
     await run_bot()
 

@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router
-from app.bot_runner import run_bot
+from app.bot_runner import configure_logging, run_bot
 from app.config import RUN_BOT
 from app.db.session import apply_migrations
 
@@ -28,6 +28,7 @@ def bot_task_done(task: asyncio.Task) -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    configure_logging()
     await apply_migrations()
     task = asyncio.create_task(run_bot()) if RUN_BOT else None
     if task:
