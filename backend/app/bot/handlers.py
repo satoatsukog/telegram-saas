@@ -1,12 +1,15 @@
 from aiogram import Router
 from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import Message
+from sqlalchemy import select
 
 from app.bot.keyboards import open_app_kb
-from app.config import SUPPORT_EMAIL, WEBAPP_URL
+from app.config import ADMIN_ID, SUPPORT_EMAIL, WEBAPP_URL
 from app.core.deep_link import parse_source
 from app.core.events import log_event
-from app.db.models import User
+from app.core.stats import compute_funnel, format_funnel
+from app.core.timeutil import utcnow
+from app.db.models import Event, User
 from app.db.session import async_session
 
 router = Router()
@@ -46,3 +49,15 @@ async def paysupport(message: Message) -> None:
     await message.answer(
         f"For payment issues email {SUPPORT_EMAIL}, include your Telegram ID: {message.from_user.id}"
     )
+
+
+@router.message(Command("stats"))
+async def stats_command(message: Message) -> None:
+    if not ADMIN_ID or message.from_user.id != ADMIN_ID:
+        return
+    async with async_session() as session:
+        events = (await session.execute(select(Event.user_id, Event.event, Event.source, Event.ts))).all()
+        users = (await session.execute(select(User.id, User.source))).all()
+    user_source = {uid: src for uid, src in users}
+    result = compute_funnel([tuple(e) for e in events], user_source, utcnow())
+    await message.answer(format_funnel(result))

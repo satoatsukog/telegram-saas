@@ -64,8 +64,10 @@ Passed: free flow, paywall, real 1-Star test purchase (second account), admin no
   refund restores non-premium; reminder fires at 19:00 local; free caps block correctly.
 - Fix bugs found; keep notes for README.
 
-## Step 7 — Deploy  ✅ (code ready; Railway Hobby, from GitHub repo)
+## Step 7 — Deploy  ✅ LIVE IN PRODUCTION (Railway; bot @RecallDeckAppBot)
 **Goal:** public, always-on bot + Mini App over HTTPS.
+Deployed and smoke-tested end-to-end on a phone: bot replies, Mini App opens over HTTPS,
+payments + reminders run in the single always-on process.
 - **One Railway service, one volume** (SQLite is a single file). In prod everything runs in
   **one process**: `uvicorn app.main:app` serves the API *and* the built frontend (same origin,
   no CORS) and starts bot polling + scheduler inside the FastAPI lifespan when `RUN_BOT=1`.

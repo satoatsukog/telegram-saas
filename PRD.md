@@ -27,7 +27,7 @@ The product is niche-neutral (drill *any* words/terms), so the same build lets m
 deadline-driven, vocabulary-heavy audience converts best. I'll run **2–3 audiences in parallel**,
 each with its own deep link `?start=<source>` (attributed via the `start(source)` event, §8):
 - `?start=aud_ielts` — IELTS / English-exam vocabulary (the primary hypothesis above).
-- `?start=aud_gre` — GRE / SAT exam vocabulary.
+- `?start=aud_polish` — Russian speakers learning Polish vocabulary.
 - `?start=aud_med` — medical / nursing terminology students.
 
 **Decision rule:** after 2 weeks, compare the funnel per source
